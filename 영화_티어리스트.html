@@ -29,6 +29,7 @@
 <form id="add-form">
   <input id="title-input" placeholder="영화 제목" autocomplete="off">
   <button type="submit">추가</button>
+  <button type="button" id="reset">처음으로</button>
   <span id="msg" role="alert"></span>
 </form>
 
@@ -38,14 +39,32 @@ const NAMES = { U: '미분류' };
 const INITIAL = ['기생충', '인터스텔라', '라라랜드', '센과 치히로의 행방불명',
                  '어벤져스: 엔드게임', '범죄도시', '타이타닉', '토이 스토리'];
 
-let movies = INITIAL.map((title, i) => ({ id: i + 1, title, tier: 'U' }));
+const KEY = 'movie-tierlist-v1';
+const initialMovies = () => INITIAL.map((title, i) => ({ id: i + 1, title, tier: 'U' }));
+
+function load() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY));
+    if (Array.isArray(saved) && saved.every(m => m && m.id && m.title && TIERS.includes(m.tier))) return saved;
+  } catch (e) {}
+  return initialMovies();
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(movies)); } catch (e) {}
+}
+
+let movies = load();
 let selectedId = null;
+
+document.getElementById('reset').onclick = () => {
+  movies = initialMovies(); selectedId = null; save(); render();
+};
 
 function move(id, tier) {
   const m = movies.find(x => x.id === id);
   if (m) m.tier = tier;          // 영화 객체는 tier 값이 하나뿐이라 항상 한 칸에만 존재
   selectedId = null;
-  render();
+  save(); render();
 }
 
 document.getElementById('add-form').onsubmit = e => {
@@ -58,7 +77,7 @@ document.getElementById('add-form').onsubmit = e => {
   const id = movies.reduce((mx, m) => Math.max(mx, m.id), 0) + 1;
   movies.push({ id, title, tier: 'U' });   // 새 카드는 미분류에 배치
   input.value = '';
-  render();
+  save(); render();
 };
 
 function render() {
