@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내 영화 티어리스트</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; background: #1b1b1f; color: #eee; }
+  h1 { font-size: 1.4rem; margin: 0 0 12px; }
+  .tier { display: flex; margin-bottom: 6px; background: #2a2a30; min-height: 64px; }
+  .label { flex: 0 0 64px; display: flex; align-items: center; justify-content: center;
+           font-weight: bold; font-size: 1.4rem; color: #111; cursor: pointer; border: 0; }
+  .cards { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; min-width: 0; }
+  .card { padding: 8px 12px; background: #44444d; border-radius: 6px; cursor: pointer; user-select: none; }
+  .card.selected { outline: 2px solid #ffd54f; }
+  #tier-S .label { background: #ff7f7f; } #tier-A .label { background: #ffbf7f; }
+  #tier-B .label { background: #ffff7f; } #tier-C .label { background: #7fff7f; }
+  #tier-U .label { background: #bbb; font-size: 1rem; }
+</style>
+</head>
+<body>
+<h1>내 영화 티어리스트</h1>
+<div id="board"></div>
+
+<script>
+const TIERS = ['S', 'A', 'B', 'C', 'U'];
+const NAMES = { U: '미분류' };
+const INITIAL = ['기생충', '인터스텔라', '라라랜드', '센과 치히로의 행방불명',
+                 '어벤져스: 엔드게임', '범죄도시', '타이타닉', '토이 스토리'];
+
+let movies = INITIAL.map((title, i) => ({ id: i + 1, title, tier: 'U' }));
+let selectedId = null;
+
+function move(id, tier) {
+  const m = movies.find(x => x.id === id);
+  if (m) m.tier = tier;          // 영화 객체는 tier 값이 하나뿐이라 항상 한 칸에만 존재
+  selectedId = null;
+  render();
+}
+
+function render() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  for (const t of TIERS) {
+    const row = document.createElement('div');
+    row.className = 'tier'; row.id = 'tier-' + t;
+
+    const label = document.createElement('button');
+    label.className = 'label'; label.textContent = NAMES[t] || t;
+    label.onclick = () => { if (selectedId !== null) move(selectedId, t); };
+
+    const cards = document.createElement('div');
+    cards.className = 'cards';
+    cards.ondragover = e => e.preventDefault();
+    cards.ondrop = e => { e.preventDefault(); move(Number(e.dataTransfer.getData('text/plain')), t); };
+
+    for (const m of movies.filter(x => x.tier === t)) {
+      const c = document.createElement('div');
+      c.className = 'card' + (m.id === selectedId ? ' selected' : '');
+      c.textContent = m.title; c.draggable = true;
+      c.onclick = () => { selectedId = (selectedId === m.id ? null : m.id); render(); };
+      c.ondragstart = e => e.dataTransfer.setData('text/plain', String(m.id));
+      cards.appendChild(c);
+    }
+    row.append(label, cards);
+    board.appendChild(row);
+  }
+}
+render();
+</script>
+</body>
+</html>
