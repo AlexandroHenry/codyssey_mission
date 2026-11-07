@@ -17,11 +17,20 @@
   #tier-S .label { background: #ff7f7f; } #tier-A .label { background: #ffbf7f; }
   #tier-B .label { background: #ffff7f; } #tier-C .label { background: #7fff7f; }
   #tier-U .label { background: #bbb; font-size: 1rem; }
+  #add-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+  #add-form input { flex: 1 1 200px; min-width: 0; padding: 8px; }
+  #msg { color: #ff8a80; }
 </style>
 </head>
 <body>
 <h1>내 영화 티어리스트</h1>
 <div id="board"></div>
+
+<form id="add-form">
+  <input id="title-input" placeholder="영화 제목" autocomplete="off">
+  <button type="submit">추가</button>
+  <span id="msg" role="alert"></span>
+</form>
 
 <script>
 const TIERS = ['S', 'A', 'B', 'C', 'U'];
@@ -38,6 +47,19 @@ function move(id, tier) {
   selectedId = null;
   render();
 }
+
+document.getElementById('add-form').onsubmit = e => {
+  e.preventDefault();
+  const input = document.getElementById('title-input');
+  const msg = document.getElementById('msg');
+  const title = input.value.trim();
+  if (!title) { msg.textContent = '영화 제목을 입력해 주세요.'; return; }
+  msg.textContent = '';
+  const id = movies.reduce((mx, m) => Math.max(mx, m.id), 0) + 1;
+  movies.push({ id, title, tier: 'U' });   // 새 카드는 미분류에 배치
+  input.value = '';
+  render();
+};
 
 function render() {
   const board = document.getElementById('board');
