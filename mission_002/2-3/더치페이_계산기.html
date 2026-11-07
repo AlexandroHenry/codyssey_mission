@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>더치페이 계산기</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; background: #f5f6f8; color: #222; }
+  main { max-width: 420px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; }
+  h1 { font-size: 1.4rem; margin: 0 0 16px; }
+  label { display: block; margin-bottom: 12px; }
+  input[type=number] { display: block; width: 100%; margin-top: 4px; padding: 10px; font-size: 1rem; }
+  .check { display: flex; gap: 8px; align-items: center; }
+  .buttons { display: flex; gap: 8px; margin-top: 8px; }
+  button { flex: 1; padding: 10px; font-size: 1rem; cursor: pointer; }
+  #error { color: #c62828; margin-top: 12px; min-height: 1.2em; }
+  #result { margin-top: 12px; }
+  #per-person { font-size: 1.6rem; font-weight: bold; }
+</style>
+</head>
+<body>
+<main>
+  <h1>더치페이 계산기</h1>
+  <form id="form" novalidate>
+    <label>총 금액(원)
+      <input id="total" type="number" inputmode="numeric" step="any">
+    </label>
+    <label>인원수(명)
+      <input id="people" type="number" inputmode="numeric" step="any">
+    </label>
+    <label class="check"><input id="round" type="checkbox"> 100원 단위로 올림</label>
+    <div class="buttons">
+      <button type="submit">계산</button>
+      <button type="button" id="reset">다시 입력</button>
+    </div>
+  </form>
+  <div id="error" role="alert"></div>
+  <div id="result" hidden>
+    <div id="per-person"></div>
+    <div id="detail"></div>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const won = n => n.toLocaleString('ko-KR') + '원';
+
+function showError(text) {
+  $('result').hidden = true;
+  $('error').textContent = text;
+}
+
+$('form').onsubmit = e => {
+  e.preventDefault();
+  const totalText = $('total').value.trim();
+  const peopleText = $('people').value.trim();
+  const total = Number(totalText);
+  const people = Number(peopleText);
+
+  if (totalText === '' || !Number.isInteger(total) || total <= 0) {
+    return showError('총 금액을 1원 이상의 정수(원 단위)로 입력해 주세요.');
+  }
+  if (peopleText === '' || !Number.isInteger(people) || people < 1) {
+    return showError('인원수를 1 이상의 정수로 입력해 주세요.');
+  }
+
+  const unit = $('round').checked ? 100 : 1;
+  const perPerson = Math.ceil(total / people / unit) * unit;
+  const collected = perPerson * people;
+
+  $('error').textContent = '';
+  $('per-person').textContent = '1인당 ' + won(perPerson);
+  $('detail').textContent = '총 걷는 금액 ' + won(collected) + ' · 남는 금액 ' + won(collected - total);
+  $('result').hidden = false;
+};
+
+$('reset').onclick = () => {
+  $('form').reset();
+  $('error').textContent = '';
+  $('result').hidden = true;
+};
+</script>
+</body>
+</html>
